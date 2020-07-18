@@ -1,0 +1,30 @@
+
+
+version: "2"
+services:
+    api:
+        build: .
+        command: npm run watch
+        volumes:
+            - .:/usr/app/
+            - /usr/app/node_modules
+        ports:
+            - "3200:3200"
+        depends_on:
+            - postgres
+        environment:
+            DATABASE_URL: postgres://sprachcenter@postgres/sprachcenter
+    school_docs:
+        image: swaggerapi/swagger-ui:latest
+        environment:
+            API_URL: http://localhost:3200/swagger.json
+        ports:
+            - 3001:8080
+    postgres:
+        image: postgres:latest
+        ports:
+            - 5432:5432
+        environment:
+            POSTGRES_USER: sprachcenter
+            POSTGRES_PASSWORD: 1234
+            POSTGRES_DB: sprachcenter
