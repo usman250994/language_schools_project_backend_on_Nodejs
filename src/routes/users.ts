@@ -3,7 +3,7 @@ import express, { Router } from 'express';
 
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/enums';
-import { getAllAdminUsers, createUser, updateUser } from '../services/users';
+import { getAllAdminUsers, createAdmin, createUsers, updateUser } from '../services/users';
 import { wrapAsync } from '../utils/asyncHandler';
 
 import { Request, isUserReq } from './interfaces';
@@ -239,18 +239,40 @@ router.put('/users/me', authorize(), wrapAsync(async (req: Request, res: express
  *       500:
  *         $ref: '#/components/responses/InternalError'
  */
-router.post('/users', authorize([Role.ADMIN]), wrapAsync(async (req: Request, res: express.Response) => {
+// create admin user by su
+router.post('/user/admin', authorize([Role.SU]), wrapAsync(async (req: Request, res: express.Response) => {
     if (!isUserReq(req)) {
         throw new Error('User not found in session');
     }
-
     const { email } = await Joi
         .object({
             email: Joi.string().trim().lowercase().email().required().label('Email'),
         })
         .validateAsync(req.body);
 
-    const user = await createUser(email, Role.ADMIN);
+    const user = await createAdmin(email, Role.ADMIN);
+
+    res.send({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+    });
+}));
+// create all users except admin
+router.post('/user', authorize([Role.ADMIN]), wrapAsync(async (req: Request, res: express.Response) => {
+    if (!isUserReq(req)) {
+        throw new Error('User not found in session');
+    }
+
+    const { email, role, parentId } = await Joi
+        .object({
+            email: Joi.string().trim().lowercase().email().required().label('Email'),
+            role: Joi.string().validate([Role.STUDENT, Role.PARENT, Role.TEACHER]).required(),
+            parentId: Joi.string().optional()
+        })
+        .validateAsync(req.body);
+
+    const user = await createUsers(email, role, parentId);
 
     res.send({
         id: user.id,

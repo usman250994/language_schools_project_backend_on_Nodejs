@@ -7,6 +7,6 @@ export interface UserRequest extends express.Request {
 
 export type Request = express.Request | UserRequest;
 
-export function isUserReq(req: Request): req is UserRequest {
+export function isUserReq(req: Request): req is UserRequest { //what is this doing
     return (req as UserRequest).user !== undefined;
 }

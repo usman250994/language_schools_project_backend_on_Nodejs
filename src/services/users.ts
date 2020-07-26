@@ -27,7 +27,7 @@ export async function findUserByEmail(email: string): Promise<User> {
     return user;
 }
 
-export async function createUser(email: string, role: Role): Promise<User> {
+export async function createAdmin(email: string, role: Role): Promise<User> {
     const user = await findUserByEmail(email).catch(() => null);
     if (user) {
         throw Boom.conflict('User with this email already exist');
@@ -35,6 +35,16 @@ export async function createUser(email: string, role: Role): Promise<User> {
 
     return UserRepo.create(email, role);
 }
+
+export async function createUsers(email: string, role: Role, parentId?: string): Promise<User> {
+    const user = await findUserByEmail(email).catch(() => null);
+    if (user) {
+        throw Boom.conflict('User with this email already exist');
+    }
+//  todo: create asociation with parent id when creating
+    return UserRepo.create(email, role);
+}
+
 
 export async function updateUser(userId: string, user: Partial<Pick<User, 'firstName' | 'lastName' | 'hashedPassword'>>): Promise<User> {
     return UserRepo.update(userId, user);

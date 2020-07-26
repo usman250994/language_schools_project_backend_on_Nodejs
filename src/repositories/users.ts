@@ -45,7 +45,7 @@ class UserRepo {
     }
 
     async create(email: string, role: Role): Promise<User> {
-        const user = this.repo.create({ email, role });
+        const user = this.repo.create({ email, role });//what will be the default password
 
         return this.repo.save(user);
     }

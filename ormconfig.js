@@ -1,3 +1,4 @@
+
 module.exports = {
     'type': 'postgres',
     'host': 'postgres',
