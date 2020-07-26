@@ -8,6 +8,6 @@ module.exports = {
     'synchronize': true,
     'logging': 'all',
     'entities': ['src/models/**/*.ts'],
-    'migrations': ['src/migration/**/*.ts'],
+    'migrations': ['src/migrations/**/*.ts'],
     'subscribers': ['src/subscriber/**/*.ts'],
 };
