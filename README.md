@@ -1,4 +1,4 @@
-# DTech Analysis API
+# SPRACHCENTER  API
 Made a simple REST API server as a sample project with the following technologies:
 
 - TypeScript (NodeJS v12)
@@ -11,7 +11,7 @@ Made a simple REST API server as a sample project with the following technologie
 ## Setup
 
 ### Prerequisites
-- You need [Target Data Source](https://github.com/10pearls/dtech-target-data-source) service up and running
+- You need [Target Data Source](https://github.com/usman250994/sprachcenter_BE) service up and running
 
 ### Docker
 - Clone the repository
@@ -19,9 +19,9 @@ Made a simple REST API server as a sample project with the following technologie
 
 ### Without Docker
 - Clone the repository
-- Run `yarn install`
-- Run `yarn typeorm migration:run`*
-- Run `yarn watch`*
+- Run `npm install`
+- Run `npm typeorm migration:run`*
+- Run `npm watch`*
 
 \* You need to set environment variables to provide configuration for database connection. Please see `src/config.ts` for environment variable names.
 
