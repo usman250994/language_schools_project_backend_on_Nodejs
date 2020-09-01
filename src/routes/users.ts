@@ -1,9 +1,10 @@
 import Joi from '@hapi/joi';
+import bcrypt from 'bcrypt';
 import express, { Router } from 'express';
 
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/enums';
-import { getAllAdminUsers, createUser, updateUser } from '../services/users';
+import { createUser, updateUser, getUsersByType, deleteUser, findUserByID, addStudentInParent, getStudentsByParent } from '../services/users';
 import { wrapAsync } from '../utils/asyncHandler';
 
 import { Request, isUserReq } from './interfaces';
@@ -57,18 +58,24 @@ const router = Router();
  *       500:
  *         $ref: '#/components/responses/InternalError'
  */
-router.get('/users', authorize([Role.ADMIN]), wrapAsync(async (req: Request, res: express.Response) => {
-    const { limit, offset } = await Joi
+router.get('/users/:role', authorize([Role.ADMIN]), wrapAsync(async (req: Request, res: express.Response) => {
+    if (!isUserReq(req)) {
+        throw new Error('User not found in session');
+    }
+
+    const { limit, offset, role } = await Joi
         .object({
             offset: Joi.number().integer().default(0).failover(0).label('Offset'),
             limit: Joi.number().integer().default(10).failover(10).label('Limit'),
+            role: req.user.role === Role.SUPER_ADMIN ? Joi.string().valid(Role.ADMIN).required().label('User role') : Joi.string().valid(Role.TEACHER, Role.PARENT).required().label('User role'),
         })
         .validateAsync({
             offset: req.query.offset,
             limit: req.query.limit,
+            role: req.params.role,
         });
 
-    const [users, total] = await getAllAdminUsers('all', offset, limit);
+    const [users, total] = await getUsersByType(role, offset, limit);
 
     res.send({
         total,
@@ -202,8 +209,8 @@ router.put('/users/me', authorize(), wrapAsync(async (req: Request, res: express
  * /users:
  *   post:
  *     tags:
- *       - User
- *     summary: Invite Super Admin User
+ *       - Admin
+ *     summary: Create Admin
  *     security:
  *       - JWT: []
  *     requestBody:
@@ -213,8 +220,28 @@ router.put('/users/me', authorize(), wrapAsync(async (req: Request, res: express
  *            schema:
  *              type: object
  *              properties:
+ *                firstName:
+ *                  description: Admin first name
+ *                  type: string
+ *                  minimum: 3
+ *                  maximum: 255
+ *                lastName:
+ *                  description: Admin last name
+ *                  type: string
+ *                  minimum: 3
+ *                  maximum: 255
  *                email:
  *                  description: User e-mail
+ *                  type: string
+ *                  minimum: 3
+ *                  maximum: 255
+ *                password:
+ *                  description: Admin password
+ *                  type: string
+ *                  minimum: 3
+ *                  maximum: 255
+ *                role:
+ *                  description: Admin role
  *                  type: string
  *                  minimum: 3
  *                  maximum: 255
@@ -226,12 +253,13 @@ router.put('/users/me', authorize(), wrapAsync(async (req: Request, res: express
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserInvitation'
+ *               $ref: '#/components/schemas/User'
  *             example:
  *               id: c43a3b0d-e794-4a9c-9c12-e35c6b62de4c
+ *               firstName: John
+ *               lastName: Doe
  *               email: user@client.com
- *               role: CLIENT
- *               invitationAccepted: true
+ *               role: Admin
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  *       409:
@@ -239,23 +267,213 @@ router.put('/users/me', authorize(), wrapAsync(async (req: Request, res: express
  *       500:
  *         $ref: '#/components/responses/InternalError'
  */
-router.post('/users', authorize([Role.ADMIN]), wrapAsync(async (req: Request, res: express.Response) => {
+router.post('/users', authorize([Role.SUPER_ADMIN, Role.ADMIN]), wrapAsync(async (req: Request, res: express.Response) => {
     if (!isUserReq(req)) {
         throw new Error('User not found in session');
     }
 
-    const { email } = await Joi
+    const { firstName, lastName, email, password, role } = await Joi
         .object({
+            firstName: Joi.string().trim().min(1).max(50).required().label('First name'),
+            lastName: Joi.string().trim().min(1).max(50).required().label('Last name'),
             email: Joi.string().trim().lowercase().email().required().label('Email'),
+            password: Joi.string().trim().min(1).max(50).required().label('Password'),
+            role: req.user.role === Role.SUPER_ADMIN ? Joi.string().valid(Role.ADMIN).required().label('User role') : Joi.string().valid(Role.TEACHER, Role.PARENT).required().label('User role'),
         })
         .validateAsync(req.body);
 
-    const user = await createUser(email, Role.ADMIN);
+    const hashedPassword = await bcrypt.hash(password, 8);
+    const user = await createUser(firstName, lastName, email, hashedPassword, role);
 
     res.send({
         id: user.id,
         email: user.email,
         role: user.role,
+    });
+}));
+
+/**
+ * @swagger
+ * /user/{userId}:
+ *   delete:
+ *     tags:
+ *       - User
+ *     summary: Delete a User
+ *     security:
+ *       - JWT: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/clientId'
+ *       - $ref: '#/components/parameters/tagId'
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       204:
+ *         $ref: '#/components/responses/NoContentResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+router.delete('/users/:userId', authorize([Role.ADMIN]), wrapAsync(async (req: Request, res: express.Response) => {
+    if (!isUserReq(req)) {
+        throw new Error('User not found in session');
+    }
+
+    const { userId } = await Joi
+        .object({
+            userId: Joi.string().uuid().required().label('User ID'),
+        })
+        .validateAsync({
+            userId: req.params.userId,
+        });
+
+    await deleteUser(userId);
+
+    res.status(204).send();
+}));
+
+/**
+ * @swagger
+ * /users/me:
+ *   put:
+ *     tags:
+ *       - User
+ *     summary: Edit current user profile
+ *     security:
+ *       - JWT: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               firstName:
+ *                  description: First name
+ *                  type: string
+ *                  minimum: 1
+ *                  maximum: 50
+ *               lastName:
+ *                  description: Last name
+ *                  type: string
+ *                  minimum: 1
+ *                  maximum: 50
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *             example:
+ *               id: c43a3b0d-e794-4a9c-9c12-e35c6b62de4c
+ *               email: admin@dtech.com
+ *               firstName: John
+ *               lastName: Doe
+ *               role: ADMIN
+ *               invitationAccepted: true
+ *       400:
+ *         $ref: '#/components/responses/BadRequestError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+router.put('/users/:userId', authorize(), wrapAsync(async (req: Request, res: express.Response) => {
+    if (!isUserReq(req)) {
+        throw new Error('User not found in session');
+    }
+
+    const { userId, firstName, lastName, email } = await Joi
+        .object({
+            userId: Joi.string().uuid().required().label('User ID'),
+            firstName: Joi.string().trim().min(1).max(50).required().label('First name'),
+            lastName: Joi.string().trim().min(1).max(50).required().label('Last name'),
+            email: Joi.string().trim().lowercase().email().required().label('Email'),
+        })
+        .validateAsync({
+            userId: req.params.userId,
+            ...req.body,
+        });
+
+    const _user = await updateUser(userId, { firstName, lastName, email });
+
+    res.send({
+        id: _user.id,
+        email: req.user.email,
+        firstName: _user.firstName,
+        lastName: _user.lastName,
+        role: req.user.role,
+    });
+}));
+
+router.post('/students/parent/:parentId', authorize([Role.SUPER_ADMIN, Role.ADMIN]), wrapAsync(async (req: Request, res: express.Response) => {
+    if (!isUserReq(req)) {
+        throw new Error('User not found in session');
+    }
+
+    const { firstName, lastName, email, password, role, parentId } = await Joi
+        .object({
+            firstName: Joi.string().trim().min(1).max(50).required().label('First name'),
+            lastName: Joi.string().trim().min(1).max(50).required().label('Last name'),
+            email: Joi.string().trim().lowercase().email().required().label('Email'),
+            password: Joi.string().trim().min(1).max(50).required().label('Password'),
+            role: req.user.role === Role.SUPER_ADMIN ? Joi.string().valid(Role.ADMIN).required().label('User role') : Joi.string().valid(Role.TEACHER, Role.PARENT, Role.STUDENT).required().label('User role'),
+            parentId: Joi.string().uuid().required().label('Parent ID'),
+        })
+        .validateAsync({
+            ...req.body,
+            parentId: req.params.parentId,
+        });
+
+    const hashedPassword = await bcrypt.hash(password, 8);
+
+    const parent = await findUserByID(parentId);
+
+    const student = await createUser(firstName, lastName, email, hashedPassword, role);
+
+    await addStudentInParent(student, parent);
+
+    res.send({
+        id: student.id,
+        email: student.email,
+        role: student.role,
+    });
+}));
+
+router.get('/students/parent/:parentId', authorize([Role.SUPER_ADMIN, Role.ADMIN]), wrapAsync(async (req: Request, res: express.Response) => {
+    if (!isUserReq(req)) {
+        throw new Error('User not found in session');
+    }
+
+    const { offset, limit, parentId } = await Joi
+        .object({
+            offset: Joi.number().integer().default(0).failover(0).label('Offset'),
+            limit: Joi.number().integer().default(10).failover(10).label('Limit'),
+            parentId: Joi.string().uuid().required().label('Parent ID'),
+        })
+        .validateAsync({
+            offset: req.query.offset,
+            limit: req.query.limit,
+            parentId: req.params.parentId,
+        });
+
+    const [users, total] = await getStudentsByParent(parentId, offset, limit);
+
+    res.send({
+        total,
+        data: users.map((user) => ({
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+        })),
     });
 }));
 

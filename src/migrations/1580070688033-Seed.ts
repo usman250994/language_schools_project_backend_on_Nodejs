@@ -7,11 +7,11 @@ import { User } from '../models/User';
 export class Seed1580070688033 implements MigrationInterface {
     public async up(): Promise<void> {
         const user = getRepository(User).create({
-            email: 'admin@dtech.com',
-            firstName: 'Eric',
-            lastName: 'Wilson',
-            hashedPassword: bcrypt.hashSync('helloworld', 8),
-            role: Role.ADMIN,
+            email: 'admin@admin.com',
+            firstName: 'John',
+            lastName: 'Doe',
+            hashedPassword: bcrypt.hashSync('asdasd', 8),
+            role: Role.SUPER_ADMIN,
         });
 
         await getRepository(User).save(user);
@@ -19,7 +19,7 @@ export class Seed1580070688033 implements MigrationInterface {
 
     public async down(): Promise<void> {
         const user = await getRepository(User).findOne({
-            where: { email: 'admin@dtech.com' },
+            where: { email: 'admin@admin.com' },
         });
         if (!user) {
             throw new Error('User not found');

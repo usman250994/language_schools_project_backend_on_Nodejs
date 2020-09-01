@@ -13,7 +13,12 @@ services:
         depends_on:
             - postgres
         environment:
+            NODE_ENV: development
             DATABASE_URL: postgres://sprachcenter@postgres/sprachcenter
+            AWS_S3_ENDPOINT: https://sprachcenter.s3.eu-central-1.amazonaws.com/
+            AWS_ACCESS_KEY_ID: AKIAJIWNOLX26PKMZBTQ
+            AWS_SECRET_ACCESS_KEY: 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
+            AWS_DEFAULT_REGION: us-east-1
     school_docs:
         image: swaggerapi/swagger-ui:latest
         environment:
@@ -28,3 +33,7 @@ services:
             POSTGRES_USER: sprachcenter
             POSTGRES_PASSWORD: 1234
             POSTGRES_DB: sprachcenter
+        volumes:
+            - db-data:/var/lib/postgresql/data
+volumes:
+    db-data:

@@ -9,6 +9,10 @@ export async function getAllAdminUsers(invitationAccepted: boolean | 'all', offs
     return UserRepo.getAll([Role.ADMIN], invitationAccepted, offset, limit);
 }
 
+export async function getUsersByType(userRole: Role | 'all', offset: number, limit: number): Promise<[User[], number]> {
+    return UserRepo.getAllByType(userRole, offset, limit);
+}
+
 export async function findUserByID(userId: string): Promise<User> {
     const user = await UserRepo.findById(userId);
     if (!user) {
@@ -27,16 +31,16 @@ export async function findUserByEmail(email: string): Promise<User> {
     return user;
 }
 
-export async function createUser(email: string, role: Role): Promise<User> {
+export async function createUser(firstName: string, lastName: string, email: string, hashedPassword: string, role: Role): Promise<User> {
     const user = await findUserByEmail(email).catch(() => null);
     if (user) {
         throw Boom.conflict('User with this email already exist');
     }
 
-    return UserRepo.create(email, role);
+    return UserRepo.create(firstName, lastName, email, hashedPassword, role);
 }
 
-export async function updateUser(userId: string, user: Partial<Pick<User, 'firstName' | 'lastName' | 'hashedPassword'>>): Promise<User> {
+export async function updateUser(userId: string, user: Partial<User>): Promise<User> {
     return UserRepo.update(userId, user);
 }
 
@@ -47,5 +51,15 @@ export async function updateUserPassword(userId: string, password: string): Prom
 }
 
 export async function deleteUser(userId: string): Promise<void> {
+    await findUserByID(userId);
+
     await UserRepo.remove(userId);
+}
+
+export async function addStudentInParent(student: User, parent: User): Promise<void> {
+    await UserRepo.addStudentInParent(student, parent);
+}
+
+export async function getStudentsByParent(parentId: string, offset: number, limit: number): Promise<[User[], number]> {
+    return UserRepo.getStudentsByParent(parentId, offset, limit);
 }

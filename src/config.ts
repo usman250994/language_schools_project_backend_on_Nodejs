@@ -64,6 +64,40 @@ const conf = convict({
         default: 'http://localhost:4200',
         env: 'APP_URL',
     },
+    aws: {
+        endpoint: {
+            format: '*',
+            default: '',
+            env: 'AWS_ENDPOINT',
+        },
+        region: {
+            format: '*',
+            default: 'us-east-1',
+            env: 'AWS_DEFAULT_REGION',
+        },
+        s3Endpoint: {
+            format: '*',
+            default: 'us-east-1',
+            env: 'AWS_S3_ENDPOINT',
+        },
+        accessKeyId: {
+            format: '*',
+            default: '',
+            env: 'AWS_ACCESS_KEY_ID',
+        },
+        secretAccessKey: {
+            format: '*',
+            default: '',
+            env: 'AWS_SECRET_ACCESS_KEY',
+        },
+    },
+    s3Buckets: {
+        assignments: {
+            format: '*',
+            default: 'assignment',
+            env: 'S3_BUCKET_ASSIGNMENT',
+        },
+    },
 });
 
 conf.validate({ allowed: 'strict' });

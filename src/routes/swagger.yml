@@ -216,11 +216,11 @@ components:
     User:
       required:
         - id
-        - email
         - firstName
         - lastName
+        - email
+        - password
         - role
-        - invitationAccepted
       properties:
         id:
           description: User ID
@@ -238,8 +238,26 @@ components:
         role:
           description: Role
           type: string
-        invitationAccepted:
-          description: Invitation accepted?
+    School:
+      required:
+        - id
+        - email
+        - name
+        - address
+        - phone
+      properties:
+        id:
+          description: User ID
+          type: string
+          format: uuid
+        email:
+          description: E-mail
+          type: string
+        address:
+          description: Address
+          type: string
+        phone:
+          description: School Phone number
           type: string
     ClientUser:
       required:

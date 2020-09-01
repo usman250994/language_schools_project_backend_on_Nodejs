@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import JWT from 'jsonwebtoken';
 
 import config from '../config';
+import { Role } from '../models/enums';
 import { User } from '../models/User';
 
 enum ClaimType {
@@ -10,6 +11,7 @@ enum ClaimType {
 interface AuthClaims {
     type: ClaimType;
     userId: string;
+    role: Role;
 }
 
 export async function generateAuthToken(user: User, password: string): Promise<string> {
@@ -24,6 +26,7 @@ export async function generateAuthToken(user: User, password: string): Promise<s
     const claims: AuthClaims = {
         type: ClaimType.AUTH,
         userId: user.id,
+        role: user.role,
     };
 
     return JWT.sign(claims, config.token.auth.secret, {

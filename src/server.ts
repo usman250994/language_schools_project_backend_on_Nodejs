@@ -15,7 +15,7 @@ import logger from './utils/logger';
 async function start(): Promise<void> {
     logger.info('Starting server...');
 
-    await createConnection().catch(e => console.log(e));
+    await createConnection().catch(e => logger.error(e));
 
     const app = express();
 
