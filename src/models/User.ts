@@ -1,50 +1,62 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
+  OneToMany,
+} from "typeorm";
 
-import { Classroom } from './Classroom';
-import { Role } from './enums';
-import { StudentParent } from './StudentParent';
+import { Classroom } from "./Classroom";
+import { Role } from "./enums";
+import { StudentParent } from "./StudentParent";
 
 @Entity()
 export class User {
-    @PrimaryGeneratedColumn('uuid')
-    id!: string;
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
 
-    @Column({ unique: true })
-    email!: string;
+  @Column({ unique: true })
+  email!: string;
 
-    @Column({ nullable: true })
-    firstName?: string;
+  @Column({ nullable: true })
+  firstName?: string;
 
-    @Column({ nullable: true })
-    lastName?: string;
+  @Column({ nullable: true })
+  lastName?: string;
 
-    @Column({ nullable: true })
-    address?: string;
+  @Column({ nullable: true })
+  address?: string;
 
-    @Column({ nullable: true })
-    phone?: string;
+  @Column({ nullable: true })
+  phone?: string;
 
-    @Column('enum', { enum: Role })
-    role!: Role;
+  @Column("enum", { enum: Role })
+  role!: Role;
 
-    @Column({ nullable: true })
-    hashedPassword?: string;
+  @Column({ nullable: true })
+  DOB?: number;
 
-    @ManyToMany(() => Classroom, { onDelete: 'CASCADE' })
-    @JoinTable({ name: 'classroom_user' })
-    classrooms!: Classroom[];
+  @Column({ nullable: true })
+  hashedPassword?: string;
 
-    @OneToMany(() => StudentParent, studentParent => studentParent.student)
-    @JoinTable({ name: 'student_parent' })
-    students!: User[];
+  @ManyToMany(() => Classroom, { onDelete: "CASCADE" })
+  @JoinTable({ name: "classroom_user" })
+  classrooms!: Classroom[];
 
-    @OneToMany(() => StudentParent, studentParent => studentParent.parent)
-    @JoinTable({ name: 'student_parent' })
-    parents!: User[];
+  @OneToMany(() => StudentParent, (studentParent) => studentParent.student)
+  @JoinTable({ name: "student_parent" })
+  students!: User[];
 
-    @CreateDateColumn()
-    createdAt!: Date;
+  @OneToMany(() => StudentParent, (studentParent) => studentParent.parent)
+  @JoinTable({ name: "student_parent" })
+  parents!: User[];
 
-    @UpdateDateColumn()
-    updatedAt!: Date;
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

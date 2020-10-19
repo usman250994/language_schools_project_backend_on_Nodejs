@@ -1,5 +1,3 @@
-
-
 version: "2"
 services:
     api:
@@ -34,6 +32,6 @@ services:
             POSTGRES_PASSWORD: 1234
             POSTGRES_DB: sprachcenter
         volumes:
-            - db-data:/var/lib/postgresql/data
+            - db-data1:/var/lib/postgresql/data
 volumes:
-    db-data:
+    db-data1:
