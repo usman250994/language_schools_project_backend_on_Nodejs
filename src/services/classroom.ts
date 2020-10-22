@@ -2,8 +2,10 @@ import { ManagedUpload } from "aws-sdk/clients/s3";
 import { User } from "src/models/User";
 
 import { Classroom } from "../models/Classroom";
+import { TimeTable } from "../models/TimeTable";
 import AssignmentRepo from "../repositories/assignment";
 import ClassroomRepo from "../repositories/classroom";
+import TimeTableRepo from "../repositories/timetable";
 
 import { Assignment } from "./../models/Assignment";
 import { findSchoolByProperty } from "./school";
@@ -12,11 +14,25 @@ import { findUserByID } from "./users";
 export async function createClassroom(
   schoolId: string,
   name: string,
-  section: string
+  section: string,
+  weekdays: string[]
 ): Promise<Classroom> {
-  const school = await findSchoolByProperty({ id: schoolId });
+  console.log(schoolId, name, section);
+  console.log(weekdays);
 
-  return ClassroomRepo.create(school, name, section);
+  const school = await findSchoolByProperty({ id: schoolId });
+  const classroom = await ClassroomRepo.create(school, name, section);
+  console.log("created classroom", classroom);
+  const timetable = await TimeTableRepo.create(
+    classroom,
+    weekdays[0],
+    weekdays[1],
+    weekdays[2],
+    weekdays[3],
+    weekdays[4]
+  );
+  console.log("created timetable", timetable);
+  return classroom;
 }
 
 export async function findClassroomByProperty(

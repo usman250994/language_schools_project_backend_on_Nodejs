@@ -92,16 +92,24 @@ router.post(
       throw new Error("User not found in session");
     }
 
-    const { schoolId, name, section } = await Joi.object({
+    const {
+      schoolId,
+      name,
+      section,
+     weekdays
+    } = await Joi.object({
       schoolId: Joi.string().uuid().required().label("School ID"),
       name: Joi.string().trim().min(1).max(50).required().label("Name"),
       section: Joi.string().trim().min(1).max(50).required().label("Section"),
+      startDate: Joi.number().required().label("startDate"),
+      endDate: Joi.number().required().label("endDate"),
+      weekdays: Joi.array().min(5).max(5).required().label("weekdays"),
     }).validateAsync({
       ...req.body,
       schoolId: req.params.schoolId,
     });
 
-    const classRoom = await createClassroom(schoolId, name, section);
+    const classRoom = await createClassroom(schoolId, name, section, weekdays);
 
     res.send(classRoom);
   })
