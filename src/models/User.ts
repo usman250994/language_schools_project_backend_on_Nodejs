@@ -8,6 +8,7 @@ import {
   JoinTable,
   OneToMany,
 } from "typeorm";
+import { ClassAttendance } from "./classAttendance";
 
 import { Classroom } from "./Classroom";
 import { Role } from "./enums";

@@ -9,8 +9,9 @@ import {
   ManyToMany,
   JoinTable,
   OneToOne,
-  JoinColumn,
+  OneToMany,
 } from "typeorm";
+import { ClassAttendance } from "./classAttendance";
 
 import { School } from "./School";
 import { TimeTable } from "./TimeTable";
@@ -27,7 +28,7 @@ export class Classroom {
   @Column({ nullable: false })
   section!: string;
 
-  @ManyToOne(() => School, (school) => school.classrooms, {
+  @ManyToOne(() => School, (school:any) => school.classrooms, {
     onDelete: "CASCADE",
   })
   school!: School;
@@ -36,8 +37,17 @@ export class Classroom {
   @JoinTable({ name: "classroom_user" })
   users!: User[];
 
-  @OneToOne(() => TimeTable, (timetable) => timetable.classroom)
+  @OneToOne(() => TimeTable, (timetable: any) => timetable.classroom)
   timetable!: TimeTable;
+
+  @OneToMany(
+    () => ClassAttendance,
+    (
+      classAttendance: any
+    ) =>
+      classAttendance.classroom
+  )
+  classAttendance!: ClassAttendance[];
 
   @CreateDateColumn()
   createdAt!: Date;
