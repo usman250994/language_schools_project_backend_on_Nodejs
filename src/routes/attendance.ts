@@ -1,28 +1,53 @@
 import Joi from '@hapi/joi';
 import express, { Router } from 'express';
-import attendance from 'src/repositories/attendance';
+
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/enums';
-import { createAttendance } from '../services/attendance';
+import { getAttendance, markClassAttendance } from '../services/attendance';
 import { wrapAsync } from '../utils/asyncHandler';
 
 import { Request, isUserReq } from './interfaces';
 
 const router = Router();
 
-router.post('/attendance', authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]), wrapAsync(async (req: Request, res: express.Response) => {
+router.post('/attendance/classroom/:classroomId', authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]), wrapAsync(async (req: Request, res: express.Response) => {
+    if (!isUserReq(req)) {
+        throw new Error('User not found in session');
+    }
+
+    const { attendanceStatuses, classroomId } = await Joi.object({
+        attendanceStatuses: Joi.array().items({
+            studentId: Joi.string().required().label('Student Id'),
+            status: Joi.string().trim().min(1).max(50).required().label('Status'),
+            attendanceDate: Joi.string().trim().min(1).max(50).required().label('Date'),
+        }),
+        classroomId: Joi.string().trim().min(1).max(50).required().label('classroomId'),
+    }).validateAsync({
+        classroomId: req.params.classroomId,
+        ...req.body,
+    });
+
+    console.log('here here here h after validation');
+
+    const attendance = await markClassAttendance(classroomId, attendanceStatuses);
+
+    res.send(attendance);
+}));
+
+router.get('/attendance/classroom/:classroomId', authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]), wrapAsync(async (req: Request, res: express.Response) => {
     if (!isUserReq(req)) {
         throw new Error('User not found in session');
     }
 
     const { students, classroomId } = await Joi
         .object({
-            students: Joi.array().min(1).required().label("students"),
             classroomId: Joi.string().trim().min(1).max(50).required().label('classroomId'),
         })
-        .validateAsync(req.body);
-  console.log(students,classroomId, 'routes')
-    const attendance = await createAttendance(students,classroomId);
+        .validateAsync({
+            classroomId: req.params.classroomId,
+        });
+
+    const attendance = await getAttendance(classroomId);
 
     res.send(attendance);
 }));

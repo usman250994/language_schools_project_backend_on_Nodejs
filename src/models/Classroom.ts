@@ -1,25 +1,25 @@
-import timetable from "src/repositories/timetable";
+import timetable from 'src/repositories/timetable';
 import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  ManyToMany,
-  JoinTable,
-  OneToOne,
-  OneToMany,
-} from "typeorm";
-import { ClassAttendance } from "./classAttendance";
+    Column,
+    CreateDateColumn,
+    Entity,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+    ManyToOne,
+    ManyToMany,
+    JoinTable,
+    OneToOne,
+    OneToMany,
+} from 'typeorm';
 
-import { School } from "./School";
-import { TimeTable } from "./TimeTable";
-import { User } from "./User";
+import { ClassAttendance } from './classAttendance';
+import { School } from './School';
+import { TimeTable } from './TimeTable';
+import { User } from './User';
 
 @Entity()
 export class Classroom {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ nullable: false })
@@ -28,25 +28,17 @@ export class Classroom {
   @Column({ nullable: false })
   section!: string;
 
-  @ManyToOne(() => School, (school:any) => school.classrooms, {
-    onDelete: "CASCADE",
-  })
+  @ManyToOne(() => School, (school: School) => school.classrooms, { onDelete: 'CASCADE' })
   school!: School;
 
-  @ManyToMany(() => User, { onDelete: "CASCADE" })
-  @JoinTable({ name: "classroom_user" })
+  @ManyToMany(() => User, { onDelete: 'CASCADE' })
+  @JoinTable({ name: 'classroom_user' })
   users!: User[];
 
-  @OneToOne(() => TimeTable, (timetable: any) => timetable.classroom)
+  @OneToOne(() => TimeTable, (timetable: TimeTable) => timetable.classroom)
   timetable!: TimeTable;
 
-  @OneToMany(
-    () => ClassAttendance,
-    (
-      classAttendance: any
-    ) =>
-      classAttendance.classroom
-  )
+  @OneToMany(() => ClassAttendance, (classAttendance: ClassAttendance) =>classAttendance.classroom)
   classAttendance!: ClassAttendance[];
 
   @CreateDateColumn()

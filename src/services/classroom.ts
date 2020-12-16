@@ -1,135 +1,156 @@
-import { ManagedUpload } from "aws-sdk/clients/s3";
-import { User } from "src/models/User";
+import Boom from '@hapi/boom';
+import { ManagedUpload } from 'aws-sdk/clients/s3';
+import { User } from 'src/models/User';
 
-import { Classroom } from "../models/Classroom";
-import { TimeTable } from "../models/TimeTable";
-import AssignmentRepo from "../repositories/assignment";
-import ClassroomRepo from "../repositories/classroom";
-import TimeTableRepo from "../repositories/timetable";
+import { Classroom } from '../models/Classroom';
+import { Days, TimeTable } from '../models/TimeTable';
+import AssignmentRepo from '../repositories/assignment';
+import ClassroomRepo from '../repositories/classroom';
+import TimeTableRepo from '../repositories/timetable';
 
-import { Assignment } from "./../models/Assignment";
-import { findSchoolByProperty } from "./school";
-import { findUserByID } from "./users";
+import { Assignment } from './../models/Assignment';
+import { findSchoolByProperty } from './school';
+import { findUserByID } from './users';
 
-export async function createClassroom(
-  schoolId: string,
-  name: string,
-  section: string,
-  weekdays: string[]
-): Promise<Classroom> {
-  console.log(schoolId, name, section);
-  console.log(weekdays);
+type classRoomInfo = { name: string; section: string; startDate: string; endDate: string; startTime: string; endTime: string; day: Days }
 
-  const school = await findSchoolByProperty({ id: schoolId });
-  const classroom = await ClassroomRepo.create(school, name, section);
-  console.log("created classroom", classroom);
-  const timetable = await TimeTableRepo.create(
-    classroom,
-    weekdays[0],
-    weekdays[1],
-    weekdays[2],
-    weekdays[3],
-    weekdays[4]
-  );
-  console.log("created timetable", timetable);
-  return classroom;
+export async function createClassroom(schoolId: string, data: classRoomInfo): Promise<Classroom> {
+    const school = await findSchoolByProperty({ id: schoolId });
+
+    const { name, section, ...restData } = data;
+
+    const classroom = await ClassroomRepo.create(school, name, section);
+
+    await TimeTableRepo.create(classroom, restData);
+
+    return classroom;
+}
+
+export async function findClassroomById(id: string): Promise<Classroom>{
+    const classroom = await ClassroomRepo.findByProp({ id });
+
+    if (!classroom) {
+        throw Boom.notFound('Classroom doesn\'t exist');
+    }
+
+    return classroom;
+}
+
+export async function updateClassroom(schoolId: string, classroomId: string, data: classRoomInfo): Promise<Classroom> {
+    const classroom = await findClassroomById(classroomId);
+
+    const { name, section, ...restData } = data;
+
+    await ClassroomRepo.update(classroom.id, { name, section });
+
+    await TimeTableRepo.create(classroom, restData);
+
+    return classroom;
 }
 
 export async function findClassroomByProperty(
-  property: Partial<Classroom>
+    property: Partial<Classroom>
 ): Promise<Classroom> {
-  const classRoom = await ClassroomRepo.findByProp(property);
-  if (!classRoom) {
-    throw new Error("Classroom not found");
-  }
+    const classRoom = await ClassroomRepo.findByProp(property);
+    if (!classRoom) {
+        throw new Error('Classroom not found');
+    }
 
-  return classRoom;
+    return classRoom;
 }
 
 export async function deleteClassroom(id: string): Promise<void> {
-  await findClassroomByProperty({ id });
+    await findClassroomByProperty({ id });
 
-  return ClassroomRepo.remove(id);
+    return ClassroomRepo.remove(id);
 }
 
 export async function deleteClassroomFromUser(
-  id: string,
-  userId: string
+    id: string,
+    userId: string
 ): Promise<void> {
-  await findClassroomByProperty({ id });
-  await findUserByID(userId);
+    await findClassroomByProperty({ id });
+    await findUserByID(userId);
 
-  return ClassroomRepo.removeFromUser(id, userId);
+    return ClassroomRepo.removeFromUser(id, userId);
 }
 
 export async function getClassroomByUserId(
-  userId: string,
-  offset: number,
-  limit: number
+    userId: string,
+    offset: number,
+    limit: number
 ): Promise<[Classroom[], number]> {
-  const user = await findUserByID(userId);
+    const user = await findUserByID(userId);
 
-  return ClassroomRepo.findByUserId(user.id, offset, limit);
+    return ClassroomRepo.findByUserId(user.id, offset, limit);
 }
 
 export async function getClassrooms(
-  offset: number,
-  limit: number
+    offset: number,
+    limit: number
 ): Promise<[Classroom[], number]> {
-  return ClassroomRepo.getAll(offset, limit);
+    return ClassroomRepo.getAll(offset, limit);
 }
 
 export async function getAllClassroomBySchoolId(
-  schoolId: string,
-  offset: number,
-  limit: number,
-  name = ""
+    schoolId: string,
+    offset: number,
+    limit: number,
+    name = ''
 ): Promise<[Classroom[], number]> {
-  await findSchoolByProperty({ id: schoolId });
+    await findSchoolByProperty({ id: schoolId });
 
-  return ClassroomRepo.getAllBySchoolId(schoolId, offset, limit, name);
+    return ClassroomRepo.getAllBySchoolId(schoolId, offset, limit, name);
 }
 
 export async function addClassInUser(
-  classRoomId: string,
-  userId: string
+    classRoomId: string,
+    userId: string
 ): Promise<void> {
-  const user = await findUserByID(userId);
-  const classroom = await findClassroomByProperty({ id: classRoomId });
+    const user = await findUserByID(userId);
+    const classroom = await findClassroomByProperty({ id: classRoomId });
 
-  const userClassRoom = await ClassroomRepo.getAUserClassroom(classroom, user);
+    const userClassRoom = await ClassroomRepo.getAUserClassroom(classroom, user);
 
-  if (userClassRoom) {
-    throw new Error("This classroom already exist in this user");
-  }
+    if (userClassRoom) {
+        throw new Error('This classroom already exist in this user');
+    }
 
-  return ClassroomRepo.addToUser(classroom, user);
+    return ClassroomRepo.addToUser(classroom, user);
 }
 
 export async function addAssignmentsInClass(
-  filesData: ManagedUpload.SendData[],
-  classId: string
+    filesData: ManagedUpload.SendData[],
+    classId: string
 ): Promise<Assignment[]> {
-  return Promise.all(
-    filesData.map((fileData) =>
-      AssignmentRepo.addInClass(fileData.Key, classId)
-    )
-  );
+    return Promise.all(
+        filesData.map((fileData) =>
+            AssignmentRepo.addInClass(fileData.Key, classId)
+        )
+    );
 }
 
 export async function getAssignmentsInClass(
-  classId: string,
-  offset: number,
-  limit: number
+    classId: string,
+    offset: number,
+    limit: number
 ): Promise<[Assignment[], number]> {
-  return AssignmentRepo.getClass(classId, offset, limit);
+    return AssignmentRepo.getClass(classId, offset, limit);
 }
 
 export async function getUsersByRoleAndClass(
-  role: string,
-  classId: string,
-  offset: number,
-  limit: number
+    role: string,
+    classId: string,
+    offset: number,
+    limit: number
 ): Promise<[User[], number]> {
-  return ClassroomRepo.getUsersByRoleAndClass(role, classId, offset, limit);
+    return ClassroomRepo.getUsersByRoleAndClass(role, classId, offset, limit);
+}
+
+export async function getStudentsAttendanceByClass(
+    classId: string,
+    offset: number,
+    limit: number
+): Promise<[User[], number]> {
+    return ClassroomRepo.getStudentsAttendanceByClass(classId, offset, limit);
 }

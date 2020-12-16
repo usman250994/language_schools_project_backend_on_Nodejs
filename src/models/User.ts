@@ -1,22 +1,21 @@
 import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-  ManyToMany,
-  JoinTable,
-  OneToMany,
-} from "typeorm";
-import { ClassAttendance } from "./classAttendance";
+    Column,
+    CreateDateColumn,
+    Entity,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+    ManyToMany,
+    JoinTable,
+    OneToMany,
+} from 'typeorm';
 
-import { Classroom } from "./Classroom";
-import { Role } from "./enums";
-import { StudentParent } from "./StudentParent";
+import { Classroom } from './Classroom';
+import { Role } from './enums';
+import { StudentParent } from './StudentParent';
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ unique: true })
@@ -34,7 +33,7 @@ export class User {
   @Column({ nullable: true })
   phone?: string;
 
-  @Column("enum", { enum: Role })
+  @Column('enum', { enum: Role })
   role!: Role;
 
   @Column({ nullable: true })
@@ -43,16 +42,16 @@ export class User {
   @Column({ nullable: true })
   hashedPassword?: string;
 
-  @ManyToMany(() => Classroom, { onDelete: "CASCADE" })
-  @JoinTable({ name: "classroom_user" })
+  @ManyToMany(() => Classroom, { onDelete: 'CASCADE' })
+  @JoinTable({ name: 'classroom_user' })
   classrooms!: Classroom[];
 
   @OneToMany(() => StudentParent, (studentParent) => studentParent.student)
-  @JoinTable({ name: "student_parent" })
+  @JoinTable({ name: 'student_parent' })
   students!: User[];
 
   @OneToMany(() => StudentParent, (studentParent) => studentParent.parent)
-  @JoinTable({ name: "student_parent" })
+  @JoinTable({ name: 'student_parent' })
   parents!: User[];
 
   @CreateDateColumn()

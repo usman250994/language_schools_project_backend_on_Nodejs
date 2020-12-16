@@ -38,7 +38,9 @@ class SchoolRepo {
 
       if (name) {
           query.where('school.name ILIKE :name', { name: `%${name}%` })
-              .orWhere('school.address ILIKE :name', { name: `%${name}%` });
+              .orWhere('school.email ILIKE :name', { name: `%${name}%` })
+              .orWhere('school.address ILIKE :name', { name: `%${name}%` })
+              .orWhere('school.phone ILIKE :name', { name: `%${name}%` });
       }
 
       return query.take(limit)

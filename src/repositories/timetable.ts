@@ -1,41 +1,36 @@
-import { Repository, getConnection } from "typeorm";
+import { Repository, getConnection } from 'typeorm';
 
-import { Classroom } from "../models/Classroom";
-import { TimeTable } from "../models/TimeTable";
+import { Classroom } from '../models/Classroom';
+import { TimeTable } from '../models/TimeTable';
 
 class TimeTableRepo {
   private repo: Repository<TimeTable>;
 
   constructor() {
-    this.repo = getConnection().getRepository(TimeTable);
+      this.repo = getConnection().getRepository(TimeTable);
   }
 
-  async create(
-    classroom: Classroom,
-    monday: string,
-    tuesday: string,
-    wednesday: string,
-    thursday: string,
-    friday: string
-  ): Promise<TimeTable> {
-    const timetable = this.repo.create({
-      classroom,
-      monday,
-      tuesday,
-      wednesday,
-      thursday,
-      friday,
-    });
+  async create(classroom: Classroom, data: Partial<TimeTable>): Promise<void> {
+      const relation = await this.repo.findOne({ classroom });
 
-    return this.repo.save(timetable);
+      console.log('*********************8');
+      console.log(relation);
+      console.log('*********************8');
+      if (relation) {
+          this.repo.update({ id: relation.id }, data);
+
+          return;
+      }
+
+      this.repo.save({ ...data, classroom });
   }
 
   async findByProp(prop: Partial<TimeTable>): Promise<TimeTable | undefined> {
-    const timetable = await this.repo.findOne({
-      where: [{ ...prop }],
-    });
+      const timetable = await this.repo.findOne({
+          where: [{ ...prop }],
+      });
 
-    return timetable;
+      return timetable;
   }
 }
 

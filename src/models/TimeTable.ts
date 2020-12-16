@@ -1,35 +1,49 @@
-import classroom from "src/repositories/classroom";
 import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-  JoinColumn,
-  OneToOne,
-} from "typeorm";
+    Column,
+    CreateDateColumn,
+    Entity,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+    JoinColumn,
+    OneToOne,
+} from 'typeorm';
 
-import { Classroom } from "./Classroom";
+import { Classroom } from './Classroom';
+
+export enum Days {
+  MONDAY = 'MONDAY',
+  TUESDAY = 'TUESDAY',
+  WEDNESDAY = 'WEDNESDAY',
+  THURSDAY = 'THURSDAY',
+  FRIDAY = 'FRIDAY',
+  SATURDAY = 'SATURDAY',
+  SUNDAY = 'SUNDAY',
+}
 
 @Entity()
 export class TimeTable {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ nullable: false })
-  monday!: string;
-  @Column({ nullable: false })
-  tuesday!: string;
-  @Column({ nullable: false })
-  wednesday!: string;
-  @Column({ nullable: false })
-  thursday!: string;
-  @Column({ nullable: false })
-  friday!: string;
+  @Column('enum', { enum: Days, nullable: true })
+  day?: Days;
+
+  @Column({ nullable: true })
+  startDate?: string;
+
+  @Column({ nullable: true })
+  endDate?: string;
+
+  @Column({ nullable: true })
+  startTime?: string;
+
+  @Column({ nullable: true })
+  endTime?: string;
 
   @OneToOne(() => Classroom, (classroom) => classroom.timetable, {
-    onDelete: "CASCADE",
+      onDelete: 'CASCADE',
   })
+
   @JoinColumn()
   classroom!: Classroom;
 
