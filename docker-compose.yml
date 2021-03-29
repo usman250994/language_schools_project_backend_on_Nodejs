@@ -17,12 +17,6 @@ services:
       AWS_ACCESS_KEY_ID: AKIAJIWNOLX26PKMZBTQ
       AWS_SECRET_ACCESS_KEY: 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
       AWS_DEFAULT_REGION: us-east-1
-  school_docs:
-    image: swaggerapi/swagger-ui:latest
-    environment:
-      API_URL: http://localhost:3200/swagger.json
-    ports:
-      - 3001:8080
   postgres:
     image: postgres:latest
     ports:
@@ -32,6 +26,6 @@ services:
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: sprachcenter
     volumes:
-      - db-data3:/var/lib/postgresql/data
+      - db-data4:/var/lib/postgresql/data
 volumes:
-  db-data3:
+  db-data4:

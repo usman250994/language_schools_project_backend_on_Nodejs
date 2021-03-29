@@ -10,16 +10,17 @@ import { Request, isUserReq } from './interfaces';
 
 const router = Router();
 
-router.post('/attendance/classroom/:classroomId/divisionId/:divisionId/', authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]), wrapAsync(async (req: Request, res: express.Response) => {
+router.post('/attendance/classroom/:classroomId/divisionId/:divisionId', authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]), wrapAsync(async (req: Request, res: express.Response) => {
   if (!isUserReq(req)) {
     throw new Error('User not found in session');
   }
+  console.log('before::::');
 
   const { attendanceStatuses, classroomId, divisionId } = await Joi.object({
+    divisionId: Joi.string().trim().min(1).max(50).required().label('divisionId'),
     attendanceStatuses: Joi.array().items({
       studentId: Joi.string().required().label('Student Id'),
 
-      divisionId: Joi.string().trim().min(1).max(50).required().label('divisionId'),
       status: Joi.string().trim().min(1).max(50).required().label('Status'),
 
       attendanceDate: Joi.string().trim().min(1).max(50).required().label('Date'),
@@ -30,6 +31,8 @@ router.post('/attendance/classroom/:classroomId/divisionId/:divisionId/', author
     divisionId: req.params.divisionId,
     ...req.body,
   });
+
+  console.log('after::::');
 
   const attendance = await markClassAttendance(classroomId, divisionId, attendanceStatuses);
 

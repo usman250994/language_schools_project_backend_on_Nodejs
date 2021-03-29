@@ -639,6 +639,8 @@ router.put('/students/:studentId', authorize([Role.SUPER_ADMIN, Role.ADMIN]), wr
     throw new Error('User not found in session');
   }
 
+  console.log('here here:::');
+
   const { firstName, lastName, email, password, classRoomId, divisionId, parentId, studentId } = await Joi.object({
     firstName: Joi.string().trim().min(1).max(50).required().label('First name').allow('', null),
     lastName: Joi.string().trim().min(1).max(50).required().label('Last name').allow('', null),

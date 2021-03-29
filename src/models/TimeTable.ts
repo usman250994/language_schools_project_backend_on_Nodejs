@@ -38,14 +38,12 @@ export class TimeTable {
   @OneToOne(() => Classroom, (classroom) => classroom.timetable, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn()
+  classroom!: Classroom;
 
   @OneToOne(() => Division, (division) => division.timetable, {
     onDelete: 'CASCADE',
   })
-
-  @JoinColumn()
-  classroom!: Classroom;
-
   @JoinColumn()
   division!: Division;
 
