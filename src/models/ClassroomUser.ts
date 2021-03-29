@@ -11,7 +11,7 @@ export class ClassroomUser {
 
     @Column({ primary: true })
     classroomId!: string;
-    @Column({})
+    @Column({ nullable: true })
     divisionId!: string;
 
     @ManyToOne(() => User, user => user.classrooms, { onDelete: 'CASCADE' })

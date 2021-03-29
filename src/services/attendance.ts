@@ -52,7 +52,7 @@ export async function markClassAttendance(classroomId: string, divisionId: strin
   const notFoundStudentStatuses: StudentAttendanceStatusClassroom[] = [];
 
   for (const st of studentStatuses) {
-    const classAttendance = await AttendanceRepo.findAndUpdateClassAttendanceByStudentInfo({ classroom, division, studentId: st.studentId, attendanceDate: st.attendanceDate, status: st.status });
+    const classAttendance = await AttendanceRepo.findAndUpdateClassAttendanceByStudentInfo({ classroom, studentId: st.studentId, attendanceDate: st.attendanceDate, status: st.status });
 
     if (!classAttendance) {
       notFoundStudentStatuses.push(st);
