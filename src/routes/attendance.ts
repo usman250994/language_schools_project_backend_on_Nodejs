@@ -10,46 +10,50 @@ import { Request, isUserReq } from './interfaces';
 
 const router = Router();
 
-router.post('/attendance/classroom/:classroomId', authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]), wrapAsync(async (req: Request, res: express.Response) => {
-    if (!isUserReq(req)) {
-        throw new Error('User not found in session');
-    }
+router.post('/attendance/classroom/:classroomId/divisionId/:divisionId/', authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]), wrapAsync(async (req: Request, res: express.Response) => {
+  if (!isUserReq(req)) {
+    throw new Error('User not found in session');
+  }
 
-    const { attendanceStatuses, classroomId } = await Joi.object({
-        attendanceStatuses: Joi.array().items({
-            studentId: Joi.string().required().label('Student Id'),
-            status: Joi.string().trim().min(1).max(50).required().label('Status'),
-            attendanceDate: Joi.string().trim().min(1).max(50).required().label('Date'),
-        }),
-        classroomId: Joi.string().trim().min(1).max(50).required().label('classroomId'),
-    }).validateAsync({
-        classroomId: req.params.classroomId,
-        ...req.body,
-    });
+  const { attendanceStatuses, classroomId, divisionId } = await Joi.object({
+    attendanceStatuses: Joi.array().items({
+      studentId: Joi.string().required().label('Student Id'),
 
-    console.log('here here here h after validation');
+      divisionId: Joi.string().trim().min(1).max(50).required().label('divisionId'),
+      status: Joi.string().trim().min(1).max(50).required().label('Status'),
 
-    const attendance = await markClassAttendance(classroomId, attendanceStatuses);
+      attendanceDate: Joi.string().trim().min(1).max(50).required().label('Date'),
+    }),
+    classroomId: Joi.string().trim().min(1).max(50).required().label('classroomId'),
+  }).validateAsync({
+    classroomId: req.params.classroomId,
+    divisionId: req.params.divisionId,
+    ...req.body,
+  });
 
-    res.send(attendance);
+  const attendance = await markClassAttendance(classroomId, divisionId, attendanceStatuses);
+
+  res.send(attendance);
 }));
 
-router.get('/attendance/classroom/:classroomId', authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]), wrapAsync(async (req: Request, res: express.Response) => {
-    if (!isUserReq(req)) {
-        throw new Error('User not found in session');
-    }
+router.get('/attendance/classroom/:classroomId/divisionId/:divisionId', authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]), wrapAsync(async (req: Request, res: express.Response) => {
+  if (!isUserReq(req)) {
+    throw new Error('User not found in session');
+  }
 
-    const { students, classroomId } = await Joi
-        .object({
-            classroomId: Joi.string().trim().min(1).max(50).required().label('classroomId'),
-        })
-        .validateAsync({
-            classroomId: req.params.classroomId,
-        });
+  const { students, classroomId, divisionId } = await Joi
+    .object({
+      classroomId: Joi.string().trim().min(1).max(50).required().label('classroomId'),
+      divisionId: Joi.string().trim().min(1).max(50).required().label('divisionId'),
+    })
+    .validateAsync({
+      classroomId: req.params.classroomId,
+      divisionId: req.params.divisionId,
+    });
 
-    const attendance = await getAttendance(classroomId);
+  const attendance = await getAttendance(classroomId, divisionId);
 
-    res.send(attendance);
+  res.send(attendance);
 }));
 
 // router.put('/attendance', authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]), wrapAsync(async (req: Request, res: express.Response) => {

@@ -1,18 +1,10 @@
-import timetable from 'src/repositories/timetable';
 import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-    ManyToOne,
-    ManyToMany,
-    JoinTable,
-    OneToOne,
-    OneToMany,
+  Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, OneToOne, OneToMany,
 } from 'typeorm';
 
-import { ClassAttendance } from './classAttendance';
+import { ClassAttendance } from './ClassAttendance';
+import { Division } from './Division';
+import { DivisionClassroom } from './DivisionClassroom';
 import { School } from './School';
 import { TimeTable } from './TimeTable';
 import { User } from './User';
@@ -38,8 +30,11 @@ export class Classroom {
   @OneToOne(() => TimeTable, (timetable: TimeTable) => timetable.classroom)
   timetable!: TimeTable;
 
-  @OneToMany(() => ClassAttendance, (classAttendance: ClassAttendance) =>classAttendance.classroom)
+  @OneToMany(() => ClassAttendance, (classAttendance: ClassAttendance) => classAttendance.classroom)
   classAttendance!: ClassAttendance[];
+
+  @OneToMany(() => Division, (division: Division) => division.classrooms)
+  divisions!: DivisionClassroom[];
 
   @CreateDateColumn()
   createdAt!: Date;

@@ -138,7 +138,7 @@ class UserRepo {
           .leftJoinAndSelect('student_parent', 'student_parent', 'student_parent.studentId = user.id')
           .leftJoinAndMapOne('user.parent', 'user', 'users', 'student_parent.parentId = users.id')
           .leftJoinAndMapOne('user.classRoom', 'classroom', 'classroom', 'classroom.id = classroom_user.classroomId')
-          .leftJoinAndMapOne('user.school', 'school', 'school', 'school.id = classroom.schoolId')
+          .leftJoinAndMapOne('user.school', 'school', 'school', 'school.id = "classroom"."schoolId"')
           .where('user.id = :studentId', { studentId })
           .getOne();
   }
@@ -147,12 +147,12 @@ class UserRepo {
       const query = this.repo
           .createQueryBuilder('user')
           .leftJoinAndSelect('classroom_user', 'classroom_user', 'classroom_user.userId = user.id')
-          .leftJoinAndSelect('classroom', 'classroom', 'classroom.id = classroom_user.classroomId')
+          .leftJoinAndSelect('classroom', 'classroom', 'classroom.id = "classroom_user"."classroomId"')
           .leftJoinAndSelect('school', 'school', 'school.id = classroom.schoolId')
-          .leftJoinAndSelect('student_parent', 'student_parent', 'student_parent.studentId = user.id')
+          .leftJoinAndSelect('student_parent', 'student_parent', '"student_parent"."studentId" = user.id')
           .leftJoinAndMapOne('user.parent', 'user', 'users', 'student_parent.parentId = users.id')
-          .leftJoinAndMapOne('user.classRoom', 'classroom', 'classrooms', 'classrooms.id = classroom_user.classroomId')
-          .leftJoinAndMapOne('user.school', 'school', 'schools', 'schools.id = classroom.schoolId')
+          .leftJoinAndMapOne('user.classRoom', 'classroom', 'classrooms', '"classrooms"."id" = "classroom_user"."classroomId"')
+          .leftJoinAndMapOne('user.school', 'school', 'schools', 'schools.id = "classroom"."schoolId"')
           .where('user.role = :roleStd', { roleStd: 'STUDENT' });
 
       if (keyword) {

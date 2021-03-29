@@ -1,14 +1,9 @@
 import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-    JoinColumn,
-    OneToOne,
+  Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, JoinColumn, OneToOne,
 } from 'typeorm';
 
 import { Classroom } from './Classroom';
+import { Division } from './Division';
 
 export enum Days {
   MONDAY = 'MONDAY',
@@ -41,11 +36,18 @@ export class TimeTable {
   endTime?: string;
 
   @OneToOne(() => Classroom, (classroom) => classroom.timetable, {
-      onDelete: 'CASCADE',
+    onDelete: 'CASCADE',
+  })
+
+  @OneToOne(() => Division, (division) => division.timetable, {
+    onDelete: 'CASCADE',
   })
 
   @JoinColumn()
   classroom!: Classroom;
+
+  @JoinColumn()
+  division!: Division;
 
   @CreateDateColumn()
   createdAt!: Date;

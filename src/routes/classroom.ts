@@ -89,21 +89,17 @@ router.post('/classrooms/schools/:schoolId', authorize([Role.ADMIN, Role.TEACHER
         throw new Error('User not found in session');
     }
 
-    const { schoolId, name, section, startDate, endDate, startTime, endTime, day } = await Joi.object({
+    const { schoolId, name, section, divisionId } = await Joi.object({
         schoolId: Joi.string().uuid().required().label('School ID'),
         name: Joi.string().trim().min(1).max(50).required().label('Name'),
         section: Joi.string().trim().min(1).max(50).required().label('Section'),
-        startDate: Joi.string().required().label('startDate').allow('', null),
-        endDate: Joi.string().required().label('endDate').allow('', null),
-        startTime: Joi.string().required().label('startTime').allow('', null),
-        endTime: Joi.string().required().label('endTime').allow('', null),
-        day: Joi.string().required().label('day').allow('', null),
+        divisionId: Joi.string().trim().min(1).max(50).required().label('Division'),
     }).validateAsync({
         ...req.body,
         schoolId: req.params.schoolId,
     });
 
-    const classRoom = await createClassroom(schoolId, { name, section, startDate, endDate, startTime, endTime, day });
+    const classRoom = await createClassroom(schoolId, divisionId, { name, section });
 
     res.send(classRoom);
 }));
@@ -113,23 +109,19 @@ router.put('/classrooms/:classroomId/schools/:schoolId', authorize([Role.ADMIN, 
         throw new Error('User not found in session');
     }
 
-    const { schoolId, classroomId, name, section, startDate, endDate, startTime, endTime, day } = await Joi.object({
+    const { schoolId, classroomId, name, section, divisionId } = await Joi.object({
         schoolId: Joi.string().uuid().required().label('School ID'),
         classroomId: Joi.string().uuid().required().label('Class room ID'),
         name: Joi.string().trim().min(1).max(50).required().label('Name'),
         section: Joi.string().trim().min(1).max(50).required().label('Section'),
-        startDate: Joi.string().required().label('startDate').allow('', null),
-        endDate: Joi.string().required().label('endDate').allow('', null),
-        startTime: Joi.string().required().label('startTime').allow('', null),
-        endTime: Joi.string().required().label('endTime').allow('', null),
-        day: Joi.string().required().label('day').allow('', null),
+        divisionId: Joi.string().trim().min(1).max(50).required().label('Division'),
     }).validateAsync({
         ...req.body,
         schoolId: req.params.schoolId,
         classroomId: req.params.classroomId,
     });
 
-    const classRoom = await updateClassroom(schoolId, classroomId, { name, section, startDate, endDate, startTime, endTime, day });
+    const classRoom = await updateClassroom(schoolId, classroomId, divisionId, { name, section });
 
     res.send(classRoom);
 }));
@@ -247,22 +239,24 @@ router.get(
 );
 
 router.post(
-    '/classrooms/:classRoomId/users/:userId',
+    '/classrooms/:classRoomId/users/:userId/division/:divisionId',
     authorize([Role.ADMIN, Role.TEACHER, Role.PARENT]),
     wrapAsync(async (req: Request, res: express.Response) => {
         if (!isUserReq(req)) {
             throw new Error('User not found in session');
         }
 
-        const { classRoomId, userId } = await Joi.object({
+        const { classRoomId, userId, divisionId } = await Joi.object({
             classRoomId: Joi.string().label('Class Room Id'),
             userId: Joi.string().label('User Id'),
+            divisionId: Joi.string().label('Division ID'),
         }).validateAsync({
             classRoomId: req.params.classRoomId,
             userId: req.params.userId,
+            divisionId: req.params.divisionId,
         });
 
-        await addClassInUser(classRoomId, userId);
+        await addClassInUser(classRoomId, userId, divisionId);
 
         res.status(204).send();
     })
@@ -352,8 +346,8 @@ router.post(
         });
 
         let fileData = (req as any).files.files as
-      | fileUpload.UploadedFile[]
-      | fileUpload.UploadedFile;
+            | fileUpload.UploadedFile[]
+            | fileUpload.UploadedFile;
 
         if (!Array.isArray(fileData)) {
             fileData = [fileData];
@@ -417,12 +411,12 @@ router.get(
             offset: Joi.number().integer().default(0).failover(0).label('Offset'),
             limit: Joi.number().integer().default(10).failover(10).label('Limit'),
             userType:
-        req.user.role === Role.SUPER_ADMIN
-            ? Joi.string().valid(Role.ADMIN).required().label('User role')
-            : Joi.string()
-                .valid(Role.TEACHER, Role.PARENT, Role.STUDENT)
-                .required()
-                .label('User role'),
+                req.user.role === Role.SUPER_ADMIN
+                    ? Joi.string().valid(Role.ADMIN).required().label('User role')
+                    : Joi.string()
+                        .valid(Role.TEACHER, Role.PARENT, Role.STUDENT)
+                        .required()
+                        .label('User role'),
             classroomId: Joi.string().uuid().required().label('Class R1om ID'),
         }).validateAsync({
             offset: req.query.offset,

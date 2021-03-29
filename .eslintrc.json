@@ -16,7 +16,7 @@
   "rules": {
     "@typescript-eslint/no-unused-vars": "error",
     "no-console": "error",
-    "indent": ["error", 4],
+    "indent": ["error", 2],
     "eol-last": ["error", "always"],
     "comma-dangle": ["error", "always-multiline"],
     "no-trailing-spaces": "error",
@@ -40,10 +40,26 @@
     }],
     "semi": "error",
     "padding-line-between-statements": ["error",
-      { "blankLine": "always", "prev": "*", "next": "return" },
-      { "blankLine": "always", "prev": ["const", "let", "var"], "next": "*"},
-      { "blankLine": "any", "prev": ["const", "let", "var"], "next": ["const", "let", "var"]},
-      { "blankLine": "any", "prev": ["const", "let", "var"], "next": ["if", "for"]}
+      {
+        "blankLine": "always",
+        "prev": "*",
+        "next": "return"
+      },
+      {
+        "blankLine": "always",
+        "prev": ["const", "let", "var"],
+        "next": "*"
+      },
+      {
+        "blankLine": "any",
+        "prev": ["const", "let", "var"],
+        "next": ["const", "let", "var"]
+      },
+      {
+        "blankLine": "any",
+        "prev": ["const", "let", "var"],
+        "next": ["if", "for"]
+      }
     ],
     "quotes": ["error", "single"],
     "linebreak-style": ["error", "unix"],

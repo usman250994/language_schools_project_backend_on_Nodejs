@@ -1,17 +1,17 @@
 {
-    "type": "postgres",
-    "host": "postgres",
-    "port": 5432,
-    "username": "sprachcenter",
-    "password": 1234,
-    "database": "sprachcenter",
-    "synchronize": true,
-    "logging": "all",
-    "entities": ["src/models/**/*"],
-    "migrations": ["src/migrations/**/*"],
-    "subscribers": ["src/subscriber/**/*"],
-    "cli": {
-        "migrationsDir": "src/migrations",
-        "entitiesDir": "src/models"
-    }
+  "type": "postgres",
+  "host": "postgres",
+  "port": 5432,
+  "username": "sprachcenter",
+  "password": 1234,
+  "database": "sprachcenter",
+  "synchronize": true,
+  "logging": "all",
+  "entities": ["src/models/**/*"],
+  "migrations": ["src/migrations/**/*"],
+  "subscribers": ["src/subscriber/**/*"],
+  "cli": {
+    "migrationsDir": "src/migrations",
+    "entitiesDir": "src/models"
+  }
 }

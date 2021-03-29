@@ -1,7 +1,5 @@
-import classroom from 'src/repositories/classroom';
-import { Column, Entity, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 
-import { Classroom } from './Classroom';
 import { User } from './User';
 
 @Entity()

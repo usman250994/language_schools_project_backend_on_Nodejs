@@ -3,7 +3,7 @@
 if [[ "$NODE_ENV" == "development" ]]; then
   ./wait-for-it.sh $DB_HOST:$DB_PORT
 
-  npm typeorm schema:sync
+  npm run typeorm schema:sync
   if [ $? -ne 0 ]; then
     echo "Database sync failed :("
     exit 1

@@ -1,12 +1,5 @@
 import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-    ManyToMany,
-    JoinTable,
-    OneToMany,
+  Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, ManyToMany, JoinTable, OneToMany,
 } from 'typeorm';
 
 import { Classroom } from './Classroom';

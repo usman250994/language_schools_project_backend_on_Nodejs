@@ -3,30 +3,58 @@ import { ManagedUpload } from 'aws-sdk/clients/s3';
 import { User } from 'src/models/User';
 
 import { Classroom } from '../models/Classroom';
+import { Division } from '../models/Division';
 import { Days, TimeTable } from '../models/TimeTable';
 import AssignmentRepo from '../repositories/assignment';
 import ClassroomRepo from '../repositories/classroom';
+import DivisionRepo from '../repositories/division';
 import TimeTableRepo from '../repositories/timetable';
 
 import { Assignment } from './../models/Assignment';
+import { findDivisionById, findDivisionByProperty } from './division';
 import { findSchoolByProperty } from './school';
 import { findUserByID } from './users';
 
 type classRoomInfo = { name: string; section: string; startDate: string; endDate: string; startTime: string; endTime: string; day: Days }
 
-export async function createClassroom(schoolId: string, data: classRoomInfo): Promise<Classroom> {
+export async function checkIfDivisionAlreadyExistInClassroom(division: Division, classroom: Classroom): Promise<void> {
+    const relation = await DivisionRepo.findClassByDivision(division, classroom);
+
+    if (relation) {
+        throw Boom.conflict('Division Already exist in classroom');
+    }
+}
+
+export async function createClassroom(schoolId: string, divisionId: string, data: Partial<classRoomInfo>): Promise<Classroom> {
     const school = await findSchoolByProperty({ id: schoolId });
+    const division = await findDivisionByProperty({ id: divisionId });
 
-    const { name, section, ...restData } = data;
+    const { name, section } = data;
 
-    const classroom = await ClassroomRepo.create(school, name, section);
+    const {
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        day,
+    } = division;
 
-    await TimeTableRepo.create(classroom, restData);
+    const classroom = await ClassroomRepo.create(school, division, name || '', section || '');
+
+    await DivisionRepo.addDivisionInClassroom(division, classroom);
+
+    await TimeTableRepo.create(classroom, {
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        day,
+    });
 
     return classroom;
 }
 
-export async function findClassroomById(id: string): Promise<Classroom>{
+export async function findClassroomById(id: string): Promise<Classroom> {
     const classroom = await ClassroomRepo.findByProp({ id });
 
     if (!classroom) {
@@ -36,14 +64,33 @@ export async function findClassroomById(id: string): Promise<Classroom>{
     return classroom;
 }
 
-export async function updateClassroom(schoolId: string, classroomId: string, data: classRoomInfo): Promise<Classroom> {
+export async function updateClassroom(schoolId: string, classroomId: string, divisionId: string, data: Partial<classRoomInfo>): Promise<Classroom> {
     const classroom = await findClassroomById(classroomId);
+    const division = await findDivisionByProperty({ id: divisionId });
 
-    const { name, section, ...restData } = data;
+    await checkIfDivisionAlreadyExistInClassroom(division, classroom);
 
-    await ClassroomRepo.update(classroom.id, { name, section });
+    const { name, section } = data;
 
-    await TimeTableRepo.create(classroom, restData);
+    const updatedClassroom = await ClassroomRepo.update(classroom.id, { name, section });
+
+    await DivisionRepo.addDivisionInClassroom(division, updatedClassroom);
+
+    const {
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        day,
+    } = division;
+
+    await TimeTableRepo.create(classroom, {
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        day,
+    });
 
     return classroom;
 }
@@ -105,7 +152,8 @@ export async function getAllClassroomBySchoolId(
 
 export async function addClassInUser(
     classRoomId: string,
-    userId: string
+    userId: string,
+    divisionId: string,
 ): Promise<void> {
     const user = await findUserByID(userId);
     const classroom = await findClassroomByProperty({ id: classRoomId });
@@ -116,7 +164,9 @@ export async function addClassInUser(
         throw new Error('This classroom already exist in this user');
     }
 
-    return ClassroomRepo.addToUser(classroom, user);
+    const division = await findDivisionById(divisionId);
+
+    return ClassroomRepo.addToUser(classroom, division, user);
 }
 
 export async function addAssignmentsInClass(

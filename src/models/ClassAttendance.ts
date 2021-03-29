@@ -1,10 +1,10 @@
 import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-    ManyToOne,
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm';
 
 import { Classroom } from './Classroom';
@@ -20,7 +20,7 @@ export class ClassAttendance {
   id!: string;
 
   @ManyToOne(() => Classroom, (classroom: Classroom) => classroom.classAttendance, {
-      onDelete: 'CASCADE',
+    onDelete: 'CASCADE',
   })
   classroom!: Classroom;
 
@@ -30,7 +30,7 @@ export class ClassAttendance {
   @Column('enum', { enum: AttendanceStatus, default: AttendanceStatus.ABSENT })
   status!: AttendanceStatus;
 
-  @Column({ nullable: false })
+  @Column('date', { nullable: false })
   attendanceDate!: Date;
 
   @CreateDateColumn()
